@@ -37,7 +37,7 @@ const DEFAULT_HOURS: WorkingHours = {
 export const PEOPLE: Person[] = [
   {
     slug: "lindi",
-    name: "Lindi Ngwenga",
+    name: "Lindi Ngwenya",
     title: "Managing Director",
     email: "lindi@sisusportsmanagement.com",
     timezone: "Europe/London",
