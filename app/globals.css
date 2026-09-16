@@ -3,6 +3,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Team Calendar brand: faded orange / purple / blue */
+  --brand-orange: #f0a875;
+  --brand-purple: #b18ad6;
+  --brand-blue: #7fabd9;
+  --brand-gradient: linear-gradient(90deg, var(--brand-orange), var(--brand-purple), var(--brand-blue));
+  --brand-surface: #faf7f5;
+  --brand-border: #e9e2ea;
 }
 
 @theme inline {
@@ -16,6 +24,8 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --brand-surface: #17151a;
+    --brand-border: #2a2630;
   }
 }
 
@@ -23,4 +33,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.slot-btn {
+  background: var(--brand-surface);
+}
+
+.slot-btn:hover {
+  background: var(--brand-gradient);
+  color: #fff;
+  border-color: transparent;
 }
