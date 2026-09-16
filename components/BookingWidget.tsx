@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
 import { INDIVIDUALS, TEAMS, getPerson } from "@/lib/people";
 import Avatar from "./Avatar";
+import Calendar from "./Calendar";
 
 interface Slot {
   start: string;
@@ -39,6 +40,7 @@ export default function BookingWidget({
   const [error, setError] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [people, setPeople] = useState<SelectedPersonInfo[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -59,6 +61,7 @@ export default function BookingWidget({
     setLoading(true);
     setError(null);
     setSelectedSlot(null);
+    setSelectedDate(null);
     fetch("/api/availability", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -83,15 +86,24 @@ export default function BookingWidget({
     setTeamSlugs((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
   }
 
-  const slotsByDay = useMemo(() => {
+  const slotsByDateKey = useMemo(() => {
     const groups = new Map<string, Slot[]>();
     for (const slot of slots) {
-      const day = DateTime.fromISO(slot.start).setZone(localTz).toFormat("cccc, LLL d");
-      if (!groups.has(day)) groups.set(day, []);
-      groups.get(day)!.push(slot);
+      const key = DateTime.fromISO(slot.start).setZone(localTz).toFormat("yyyy-LL-dd");
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(slot);
     }
-    return [...groups.entries()];
+    return groups;
   }, [slots, localTz]);
+
+  const availableDates = useMemo(() => new Set(slotsByDateKey.keys()), [slotsByDateKey]);
+
+  useEffect(() => {
+    if (selectedDate || availableDates.size === 0) return;
+    setSelectedDate([...availableDates].sort()[0]);
+  }, [availableDates, selectedDate]);
+
+  const timesForSelectedDay = selectedDate ? (slotsByDateKey.get(selectedDate) ?? []) : [];
 
   async function submitBooking() {
     if (!selectedSlot) return;
@@ -279,25 +291,37 @@ export default function BookingWidget({
         <p className="text-neutral-500">No shared availability in the next two weeks.</p>
       )}
 
-      <div className="space-y-6">
-        {slotsByDay.map(([day, daySlots]) => (
-          <div key={day}>
-            <h3 className="text-sm font-medium mb-2">{day}</h3>
-            <div className="flex flex-wrap gap-2">
-              {daySlots.map((slot) => (
-                <button
-                  key={slot.start}
-                  className="slot-btn border rounded-md px-3 py-1.5 text-sm transition"
-                  style={{ borderColor: "var(--brand-border)" }}
-                  onClick={() => setSelectedSlot(slot)}
-                >
-                  {DateTime.fromISO(slot.start).setZone(localTz).toFormat("h:mm a")}
-                </button>
-              ))}
-            </div>
+      {hasSelection && !loading && slots.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-8">
+          <Calendar
+            timezone={localTz}
+            availableDates={availableDates}
+            selectedDate={selectedDate}
+            onSelect={setSelectedDate}
+          />
+          <div className="flex-1 min-w-0">
+            {selectedDate && (
+              <>
+                <h3 className="text-sm font-medium mb-3">
+                  {DateTime.fromFormat(selectedDate, "yyyy-LL-dd", { zone: localTz }).toFormat("cccc, LLL d")}
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {timesForSelectedDay.map((slot) => (
+                    <button
+                      key={slot.start}
+                      className="slot-btn border rounded-md px-3 py-1.5 text-sm transition"
+                      style={{ borderColor: "var(--brand-border)" }}
+                      onClick={() => setSelectedSlot(slot)}
+                    >
+                      {DateTime.fromISO(slot.start).setZone(localTz).toFormat("h:mm a")}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

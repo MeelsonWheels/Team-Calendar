@@ -82,7 +82,7 @@ export const PEOPLE: Person[] = [
   },
   {
     slug: "adam",
-    name: "Adam",
+    name: "Adam Mizrahi",
     title: "African Women's Scouting Hub",
     email: "adam@sisusportsmanagement.com",
     timezone: "Europe/London",
