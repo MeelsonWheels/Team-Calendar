@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { expandSelection } from "@/lib/people";
-import { getCalendarClient } from "@/lib/google";
+import { getCalendarClient, hasGoogleCredentials } from "@/lib/google";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -27,6 +27,12 @@ export async function POST(req: NextRequest) {
     const people = expandSelection(personSlugs, teamSlugs);
     if (people.length === 0) {
       return NextResponse.json({ error: "Select at least one person or team" }, { status: 400 });
+    }
+
+    if (!hasGoogleCredentials()) {
+      // Demo mode: no real calendar connected yet, so simulate a booking
+      // without calling the Google API.
+      return NextResponse.json({ demo: true, eventId: "demo-event" });
     }
 
     const calendar = getCalendarClient();

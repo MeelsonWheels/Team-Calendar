@@ -60,7 +60,7 @@ export const PEOPLE: Person[] = [
     name: "Oscar",
     title: "Managing Partner, Asia Pacific",
     email: "apac@sisusportsmanagement.com",
-    timezone: "Asia/Singapore",
+    timezone: "Australia/Melbourne",
     workingHours: DEFAULT_HOURS,
   },
   {
@@ -68,7 +68,7 @@ export const PEOPLE: Person[] = [
     name: "Emelia",
     title: "Managing Partner, Europe & Africa",
     email: "emelia@sisusportsmanagement.com",
-    timezone: "Europe/London",
+    timezone: "Europe/Berlin",
     workingHours: DEFAULT_HOURS,
   },
   {
@@ -76,7 +76,7 @@ export const PEOPLE: Person[] = [
     name: "Adam",
     title: "African Women's Scouting Hub",
     email: "adam@sisusportsmanagement.com",
-    timezone: "Africa/Johannesburg",
+    timezone: "Europe/London",
     workingHours: DEFAULT_HOURS,
   },
 ];

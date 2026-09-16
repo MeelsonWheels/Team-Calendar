@@ -43,7 +43,8 @@ export default function BookingWidget({
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [confirmed, setConfirmed] = useState<{ meetLink?: string; htmlLink?: string } | null>(null);
+  const [confirmed, setConfirmed] = useState<{ meetLink?: string; htmlLink?: string; demo?: boolean } | null>(null);
+  const [demo, setDemo] = useState(false);
 
   const localTz = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
   const hasSelection = personSlugs.length > 0 || teamSlugs.length > 0;
@@ -67,6 +68,7 @@ export default function BookingWidget({
         if (!res.ok) throw new Error(data.error ?? "Failed to load availability");
         setSlots(data.slots);
         setPeople(data.people);
+        setDemo(Boolean(data.demo));
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -121,13 +123,22 @@ export default function BookingWidget({
   if (confirmed) {
     return (
       <div className="max-w-lg mx-auto p-8 text-center">
+        {confirmed.demo && (
+          <p className="text-xs uppercase tracking-wide mb-4 py-1 px-2 inline-block rounded"
+             style={{ background: "var(--brand-gradient)", color: "#fff" }}>
+            Demo — no real invite was sent
+          </p>
+        )}
         <h1 className="text-2xl font-semibold mb-2">You&apos;re booked</h1>
         <p className="text-neutral-500 mb-6">
           {selectedSlot &&
             DateTime.fromISO(selectedSlot.start).setZone(localTz).toFormat("cccc, LLL d 'at' h:mm a")}{" "}
           ({localTz})
         </p>
-        <p className="text-sm text-neutral-500 mb-4">A calendar invite has been sent to {email}.</p>
+        <p className="text-sm text-neutral-500 mb-4">
+          {confirmed.demo ? "In production, a calendar invite would be sent to " : "A calendar invite has been sent to "}
+          {email}.
+        </p>
         {confirmed.meetLink && (
           <a href={confirmed.meetLink} className="text-blue-600 underline block mb-2" target="_blank">
             Join with Google Meet
@@ -189,6 +200,14 @@ export default function BookingWidget({
 
   return (
     <div className="max-w-3xl mx-auto p-8">
+      {demo && (
+        <p
+          className="text-xs uppercase tracking-wide mb-4 py-1.5 px-3 inline-block rounded-full"
+          style={{ background: "var(--brand-gradient)", color: "#fff" }}
+        >
+          Demo data — Google Calendar isn&apos;t connected yet
+        </p>
+      )}
       <h1 className="text-2xl font-semibold mb-1">{heading}</h1>
       {subheading && <p className="text-neutral-500 mb-6">{subheading}</p>}
 

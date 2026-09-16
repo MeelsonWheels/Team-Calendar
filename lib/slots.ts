@@ -63,6 +63,22 @@ function subtractBusy(available: Interval[], busy: BusyBlock[]): Interval[] {
 }
 
 /**
+ * All working-hours windows (in UTC) for one person across the full date
+ * range, computed once per local calendar day so adjacent days can never
+ * overlap or be double-counted.
+ */
+function personWindowsForRange(person: Person, startFrom: DateTime, days: number): Interval[] {
+  const localStart = startFrom.setZone(person.timezone).startOf("day");
+  const windows: Interval[] = [];
+  // -1 to +days covers every local day that could overlap the UTC range,
+  // regardless of the person's offset from UTC.
+  for (let d = -1; d <= days; d++) {
+    windows.push(...workingIntervalsForDay(person, localStart.plus({ days: d }).toUTC()));
+  }
+  return windows;
+}
+
+/**
  * Compute open slots for a group of people over the next `days` days,
  * combining each person's working hours and busy blocks so only times
  * that work for everyone are returned.
@@ -78,36 +94,28 @@ export function computeAvailableSlots(params: {
   const { people, busyByPerson, durationMinutes, days } = params;
   const startFrom = params.startFrom ?? DateTime.utc();
   const buffer = params.bufferMinutes ?? 0;
+  const horizon = startFrom.plus({ days });
   const slots: Slot[] = [];
 
-  for (let d = 0; d < days; d++) {
-    const utcDay = startFrom.toUTC().startOf("day").plus({ days: d });
+  const perPersonWindows = people.map((person) => {
+    const windows = personWindowsForRange(person, startFrom, days);
+    const busy = busyByPerson[person.slug] ?? [];
+    return subtractBusy(windows, busy);
+  });
 
-    const perPersonWindows = people.map((person) => {
-      const dayWindows = [
-        ...workingIntervalsForDay(person, utcDay),
-        ...workingIntervalsForDay(person, utcDay.plus({ days: 1 })),
-        ...workingIntervalsForDay(person, utcDay.minus({ days: 1 })),
-      ];
-      const merged = dayWindows.filter((w) => w.overlaps(Interval.after(utcDay, { days: 1 })) || true);
-      const busy = busyByPerson[person.slug] ?? [];
-      return subtractBusy(merged, busy);
-    });
+  const commonWindows = intersectAll(perPersonWindows);
 
-    const commonWindows = intersectAll(perPersonWindows);
-
-    for (const window of commonWindows) {
-      if (!window.start || !window.end) continue;
-      const windowEnd = window.end;
-      let cursor = window.start;
-      while (cursor.plus({ minutes: durationMinutes }) <= windowEnd) {
-        const slotStart = cursor;
-        const slotEnd = cursor.plus({ minutes: durationMinutes });
-        if (slotStart > startFrom.plus({ minutes: buffer })) {
-          slots.push({ start: slotStart.toISO()!, end: slotEnd.toISO()! });
-        }
-        cursor = cursor.plus({ minutes: 15 }); // 15-min grid
+  for (const window of commonWindows) {
+    if (!window.start || !window.end) continue;
+    const windowEnd = window.end;
+    let cursor = window.start;
+    while (cursor.plus({ minutes: durationMinutes }) <= windowEnd) {
+      const slotStart = cursor;
+      const slotEnd = cursor.plus({ minutes: durationMinutes });
+      if (slotStart > startFrom.plus({ minutes: buffer }) && slotEnd <= horizon) {
+        slots.push({ start: slotStart.toISO()!, end: slotEnd.toISO()! });
       }
+      cursor = cursor.plus({ minutes: 15 }); // 15-min grid
     }
   }
 

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DateTime } from "luxon";
 import { expandSelection } from "@/lib/people";
-import { getCalendarClient } from "@/lib/google";
+import { getCalendarClient, hasGoogleCredentials } from "@/lib/google";
 import { computeAvailableSlots, type BusyBlock } from "@/lib/slots";
+import { mockBusyByPerson } from "@/lib/demo";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,22 +20,28 @@ export async function POST(req: NextRequest) {
 
     const timeMin = DateTime.utc();
     const timeMax = timeMin.plus({ days });
+    const demo = !hasGoogleCredentials();
 
-    const calendar = getCalendarClient();
-    const freebusy = await calendar.freebusy.query({
-      requestBody: {
-        timeMin: timeMin.toISO()!,
-        timeMax: timeMax.toISO()!,
-        items: people.map((p) => ({ id: p.email })),
-      },
-    });
+    let busyByPerson: Record<string, BusyBlock[]>;
+    if (demo) {
+      busyByPerson = mockBusyByPerson(people, days);
+    } else {
+      const calendar = getCalendarClient();
+      const freebusy = await calendar.freebusy.query({
+        requestBody: {
+          timeMin: timeMin.toISO()!,
+          timeMax: timeMax.toISO()!,
+          items: people.map((p) => ({ id: p.email })),
+        },
+      });
 
-    const busyByPerson: Record<string, BusyBlock[]> = {};
-    for (const person of people) {
-      const calBusy = freebusy.data.calendars?.[person.email]?.busy ?? [];
-      busyByPerson[person.slug] = calBusy
-        .filter((b) => b.start && b.end)
-        .map((b) => ({ start: b.start!, end: b.end! }));
+      busyByPerson = {};
+      for (const person of people) {
+        const calBusy = freebusy.data.calendars?.[person.email]?.busy ?? [];
+        busyByPerson[person.slug] = calBusy
+          .filter((b) => b.start && b.end)
+          .map((b) => ({ start: b.start!, end: b.end! }));
+      }
     }
 
     const slots = computeAvailableSlots({
@@ -49,6 +56,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       people: people.map((p) => ({ slug: p.slug, name: p.name, title: p.title, timezone: p.timezone })),
       slots,
+      demo,
     });
   } catch (err) {
     console.error("availability error", err);

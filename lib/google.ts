@@ -35,3 +35,16 @@ export function getCalendarClient() {
   client.setCredentials({ refresh_token: requiredEnv("GOOGLE_REFRESH_TOKEN") });
   return google.calendar({ version: "v3", auth: client });
 }
+
+/**
+ * True once real credentials are in place. Until then, the availability and
+ * booking routes fall back to mock data so the booking flow can be previewed
+ * end-to-end before Google Calendar is connected.
+ */
+export function hasGoogleCredentials(): boolean {
+  return Boolean(
+    process.env.GOOGLE_CLIENT_ID &&
+      process.env.GOOGLE_CLIENT_SECRET &&
+      process.env.GOOGLE_REFRESH_TOKEN
+  );
+}
