@@ -5,7 +5,7 @@ import BookingWidget from "@/components/BookingWidget";
 export default async function PersonBookingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const person = getPerson(slug);
-  if (!person) return notFound();
+  if (!person || person.individuallyBookable === false) return notFound();
 
   return (
     <BookingWidget

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { DateTime } from "luxon";
-import { PEOPLE, TEAMS } from "@/lib/people";
+import { INDIVIDUALS, TEAMS, getPerson } from "@/lib/people";
+import Avatar from "./Avatar";
 
 interface Slot {
   start: string;
@@ -215,10 +216,11 @@ export default function BookingWidget({
         <div className="grid sm:grid-cols-2 gap-6 mb-8">
           <div>
             <h2 className="font-medium mb-2 text-sm text-neutral-500 uppercase tracking-wide">People</h2>
-            <div className="space-y-1">
-              {PEOPLE.map((p) => (
+            <div className="space-y-2">
+              {INDIVIDUALS.map((p) => (
                 <label key={p.slug} className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={personSlugs.includes(p.slug)} onChange={() => togglePerson(p.slug)} />
+                  <Avatar person={p} size={24} />
                   {p.name} <span className="text-neutral-400">· {p.title}</span>
                 </label>
               ))}
@@ -239,8 +241,22 @@ export default function BookingWidget({
       )}
 
       {hasSelection && (
-        <div className="flex items-center gap-4 mb-6 text-sm">
-          <span className="text-neutral-500">With: {people.map((p) => p.name).join(", ") || "..."}</span>
+        <div className="flex items-center gap-4 mb-6 text-sm flex-wrap">
+          <span className="text-neutral-500 flex items-center gap-2 flex-wrap">
+            With:
+            {people.length === 0 && "..."}
+            {people.map((p) => {
+              const full = getPerson(p.slug);
+              return full ? (
+                <span key={p.slug} className="flex items-center gap-1">
+                  <Avatar person={full} size={20} />
+                  {p.name}
+                </span>
+              ) : (
+                p.name
+              );
+            })}
+          </span>
           <select
             className="border rounded-md px-2 py-1"
             value={duration}

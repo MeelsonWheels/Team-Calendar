@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { PEOPLE, TEAMS } from "@/lib/people";
+import { INDIVIDUALS, TEAMS } from "@/lib/people";
+import Avatar from "@/components/Avatar";
 
 export default function Home() {
   return (
@@ -20,15 +21,18 @@ export default function Home() {
 
       <div className="mb-8">
         <h2 className="text-sm font-medium text-neutral-500 uppercase tracking-wide mb-2">Individuals</h2>
-        <ul className="space-y-1">
-          {PEOPLE.map((p) => (
-            <li key={p.slug}>
-              <Link href={`/book/${p.slug}`} className="text-blue-600 underline">
-                /book/{p.slug}
-              </Link>{" "}
-              <span className="text-neutral-400">
-                — {p.name}, {p.title}
-              </span>
+        <ul className="space-y-3">
+          {INDIVIDUALS.map((p) => (
+            <li key={p.slug} className="flex items-center gap-3">
+              <Avatar person={p} size={36} />
+              <div>
+                <Link href={`/book/${p.slug}`} className="text-blue-600 underline">
+                  /book/{p.slug}
+                </Link>{" "}
+                <span className="text-neutral-400">
+                  — {p.name}, {p.title}
+                </span>
+              </div>
             </li>
           ))}
         </ul>

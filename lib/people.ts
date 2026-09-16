@@ -14,6 +14,10 @@ export interface Person {
   email: string;
   timezone: string; // IANA tz, e.g. "Europe/London"
   workingHours: WorkingHours;
+  /** Optional path under /public, e.g. "/people/lindi.jpg". Falls back to initials. */
+  photo?: string;
+  /** False for people who are only bookable as part of a team, not on their own. Defaults to true. */
+  individuallyBookable?: boolean;
 }
 
 export interface Team {
@@ -33,43 +37,48 @@ const DEFAULT_HOURS: WorkingHours = {
 export const PEOPLE: Person[] = [
   {
     slug: "lindi",
-    name: "Lindi",
+    name: "Lindi Ngwenga",
     title: "Managing Director",
     email: "lindi@sisusportsmanagement.com",
     timezone: "Europe/London",
     workingHours: DEFAULT_HOURS,
+    photo: "/people/lindi.jpg",
   },
   {
     slug: "addy",
-    name: "Addy",
-    title: "Head of Partnerships",
+    name: "Addy Ekhaese",
+    title: "Director of Marketing & Partnerships",
     email: "addy@sisusportsmanagement.com",
     timezone: "Europe/London",
     workingHours: DEFAULT_HOURS,
+    photo: "/people/addy.jpg",
   },
   {
     slug: "leo",
-    name: "Leo",
-    title: "Managing Partner, Americas",
+    name: "Leo Tillemont",
+    title: "Managing Partner, Sisu Americas",
     email: "leo@sisuamericas.com",
     timezone: "America/New_York",
     workingHours: DEFAULT_HOURS,
+    photo: "/people/leo.jpg",
   },
   {
     slug: "oscar",
-    name: "Oscar",
-    title: "Managing Partner, Asia Pacific",
+    name: "Oscar Ncube",
+    title: "Managing Partner, Sisu Asia-Pacific",
     email: "apac@sisusportsmanagement.com",
     timezone: "Australia/Melbourne",
     workingHours: DEFAULT_HOURS,
+    photo: "/people/oscar.jpg",
   },
   {
     slug: "emelia",
-    name: "Emelia",
-    title: "Managing Partner, Europe & Africa",
+    name: "Emelia Aggouras",
+    title: "Managing Partner, Sisu Africa & Europe",
     email: "emelia@sisusportsmanagement.com",
     timezone: "Europe/Berlin",
     workingHours: DEFAULT_HOURS,
+    photo: "/people/emelia.jpg",
   },
   {
     slug: "adam",
@@ -78,8 +87,12 @@ export const PEOPLE: Person[] = [
     email: "adam@sisusportsmanagement.com",
     timezone: "Europe/London",
     workingHours: DEFAULT_HOURS,
+    individuallyBookable: false,
   },
 ];
+
+/** Individually-bookable people, for the "Individuals" picker and /book/[slug] links. */
+export const INDIVIDUALS: Person[] = PEOPLE.filter((p) => p.individuallyBookable !== false);
 
 export const TEAMS: Team[] = [
   {
